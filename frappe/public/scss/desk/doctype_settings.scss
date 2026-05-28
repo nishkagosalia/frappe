@@ -1,0 +1,730 @@
+/**
+ * doctype_settings.css
+ *
+ * LOCATION IN FRAPPE:
+ *   frappe/public/js/frappe/form/doctype_settings/doctype_settings.css
+ *
+ * PURPOSE:
+ *   All styles for the DocType Settings dialog shell.
+ *   Uses Frappe's CSS variables throughout so the dialog
+ *   automatically respects light/dark mode and the active theme.
+ *
+ * NAMING CONVENTION:
+ *   All classes are prefixed with "dts-" (DocType Settings)
+ *   to avoid any collision with Frappe or ERPNext classes.
+ *
+ * ORGANISATION:
+ *   1. Modal overrides   — adjusts frappe.ui.Dialog chrome
+ *   2. Root layout       — two-column flex container
+ *   3. Sidebar           — identity block + grouped nav
+ *   4. Content area      — panel container + close button
+ *   5. State views       — loading, placeholder, error
+ *   6. Shared tab styles — card grid, rows, actions, divider
+ *                          (used by individual tab renderers)
+ */
+
+
+/* ── 1. Modal Overrides ────────────────────────────────────────────────── */
+/*
+   Frappe wraps the dialog in .modal > .modal-dialog > .modal-content.
+   We remove default padding and make the modal content flush so our
+   two-column layout bleeds to the edges cleanly, exactly like the
+   screenshot.
+*/
+
+/* max-width and margins are set via JS in make_dialog() to reliably
+   override Bootstrap's own modal-dialog inline styles */
+.modal-dialog:has(.dts-root) {
+	max-width: 1024px;
+}
+
+.modal-dialog:has(.dts-root) .modal-content {
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal-dialog:has(.dts-root) .modal-body {
+	padding: 0 !important;
+}
+
+.modal-dialog:has(.dts-root) .modal-header {
+	display: none !important;
+}
+
+.section-body:has(.dts-root) {
+	padding: 0 !important;
+
+}
+
+
+/* ── 2. Root Layout ────────────────────────────────────────────────────── */
+/*
+   Two-column flex: sidebar (fixed width) + content (fills rest).
+   Height is fixed so both columns are equal height regardless of content.
+*/
+
+.dts-root {
+	display: flex;
+	/* 100vh minus navbar (48px) minus top margin (64px) minus bottom margin (16px) */
+	height: calc(100vh - 128px);
+	max-height: 720px;
+	min-height: 480px;
+	background: var(--surface-menu-bar);
+	font-family: var(--font-stack);
+}
+
+
+/* ── 3. Sidebar ────────────────────────────────────────────────────────── */
+
+.dts-sidebar {
+	width: 224px;
+	flex-shrink: 0;
+	background: var(--surface-menu-bar);
+	border-right: none;
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	scrollbar-width: none;
+	margin: 4px;
+	border-radius: 8px 0 0 8px;
+}
+
+.dts-sidebar::-webkit-scrollbar {
+	display: none;
+}
+
+/* Identity block — doctype name at the top of the sidebar */
+
+.dts-sidebar-identity {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 20px 16px 16px;
+	border-bottom: 1px solid var(--border-color);
+	flex-shrink: 0;
+}
+
+.dts-sidebar-doctype-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background: var(--primary-light);
+	color: var(--primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.dts-sidebar-doctype-name {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-color);
+	line-height: 1.2;
+	/* Truncate long doctype names */
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dts-sidebar-doctype-sub {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 1px;
+}
+
+/* Navigation */
+
+.dts-nav {
+	flex: 1;
+	padding: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.dts-nav::-webkit-scrollbar {
+	display: none;
+}
+
+/* Group — a labelled section of nav items */
+
+.dts-nav-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+/* Matches CRM: text-xs font-medium text-ink-gray-5 h-7.5 px-2 py-[7px] my-[3px] sticky top-0 */
+.dts-nav-group-label {
+	height: 30px;
+	display: flex;
+	align-items: center;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	color: var(--ink-gray-5);
+	padding: 7px 8px;
+	margin: 3px 0;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background: var(--surface-menu-bar);
+}
+
+/* Nav item — matches CRM SidebarLink: h-7.5 rounded px-2 py-[7px] text-sm text-ink-gray-8 */
+
+.dts-nav-item {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	width: 100%;
+	height: 30px;
+	padding: 7px 8px;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.15s ease;
+	color: var(--ink-gray-8);
+	font-size: 14px;
+	box-shadow: none;
+	outline: none;
+}
+
+.dts-nav-item:hover {
+	background-color: var(--surface-gray-2, #f3f3f3);
+}
+
+/* Active: bg-surface-selected (white in light mode) + shadow-sm */
+.dts-nav-item--active {
+	background: var(--surface-modal, #ffffff) !important;
+	box-shadow: var(--shadow-sm) !important;
+}
+
+.dts-nav-item-icon {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	color: inherit;
+}
+
+.dts-nav-item-label {
+	font-size: 14px;
+	color: inherit;
+	font-weight: 400;
+	margin-left: 8px;
+}
+
+
+/* ── 4. Content Area ───────────────────────────────────────────────────── */
+
+.dts-content {
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+	background: var(--surface-modal, #fff);
+	border-radius: 0 8px 8px 0;
+	margin: 4px 4px 4px 0;
+}
+
+/* Close button — top right corner of content */
+
+.dts-close-btn {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	z-index: 10;
+	width: 30px;
+	height: 30px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background: var(--fg-color);
+	color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.12s ease;
+	padding: 0;
+}
+
+.dts-close-btn:hover {
+	background: var(--hover-bg);
+	color: var(--text-color);
+	border-color: var(--gray-400);
+}
+
+/* Panels — one per tab, only active is visible */
+
+.dts-panel {
+	display: none;
+	height: 100%;
+	overflow-y: auto;
+	padding: 28px 32px;
+	scrollbar-width: thin;
+	scrollbar-color: var(--border-color) transparent;
+}
+
+.dts-panel::-webkit-scrollbar {
+	width: 4px;
+}
+
+.dts-panel::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.dts-panel::-webkit-scrollbar-thumb {
+	background: var(--border-color);
+	border-radius: 4px;
+}
+
+.dts-panel--active {
+	display: block;
+}
+
+/* Panel header — each tab renderer should start with this structure */
+
+.dts-panel-header {
+	margin-bottom: 24px;
+	padding-bottom: 0;
+}
+
+.dts-panel-title {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--text-color);
+	margin: 0 0 4px;
+	line-height: 1.2;
+}
+
+.dts-panel-sub {
+	font-size: 13px;
+	color: var(--text-muted);
+	margin: 0;
+	line-height: 1.5;
+}
+
+
+/* ── 5. State Views ────────────────────────────────────────────────────── */
+
+/* Loading spinner inside a panel */
+
+.dts-panel-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 180px;
+}
+
+.dts-spinner {
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--border-color);
+	border-top-color: var(--primary);
+	border-radius: 50%;
+	animation: dts-spin 0.65s linear infinite;
+}
+
+@keyframes dts-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Placeholder and error — centered vertical layout */
+
+.dts-state-view {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 280px;
+	gap: 10px;
+	text-align: center;
+	padding: 0 40px;
+}
+
+.dts-state-icon {
+	color: var(--text-muted);
+	opacity: 0.5;
+	margin-bottom: 4px;
+}
+
+.dts-state-view--error .dts-state-icon {
+	color: var(--red);
+	opacity: 1;
+}
+
+.dts-state-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.dts-state-sub {
+	font-size: 13px;
+	color: var(--text-muted);
+	line-height: 1.6;
+}
+
+.dts-state-sub code {
+	display: inline-block;
+	margin-top: 8px;
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 5px;
+	padding: 3px 8px;
+	font-size: 12px;
+	color: var(--primary);
+}
+
+
+/* ── 6. Shared Tab Content Styles ─────────────────────────────────────── */
+/*
+   These are utility classes tab renderers can use.
+   They're defined here so there's a consistent visual language
+   across all tabs without each tab re-inventing styles.
+*/
+
+/* Section label — small caps heading within a tab */
+
+.dts-section-label {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.6px;
+	color: var(--text-muted);
+	margin: 0 0 10px;
+}
+
+/* Info card grid — two-column grid of value cards */
+
+.dts-card-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.dts-card {
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	padding: 12px 14px;
+	transition: border-color 0.12s;
+}
+
+.dts-card:hover {
+	border-color: var(--gray-400);
+}
+
+.dts-card-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-bottom: 4px;
+}
+
+.dts-card-value {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.dts-card-value--mono {
+	font-family: var(--font-monospace, monospace);
+	font-size: 13px;
+}
+
+.dts-card-meta {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 3px;
+}
+
+/* Row list — dense list of label/value pairs */
+
+.dts-row-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 14px;
+}
+
+.dts-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 9px 12px;
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 7px;
+	font-size: 13px;
+	transition: border-color 0.12s;
+}
+
+.dts-row:hover {
+	border-color: var(--gray-400);
+}
+
+.dts-row-label {
+	color: var(--text-color);
+	font-weight: 500;
+}
+
+.dts-row-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.dts-row-value {
+	color: var(--text-muted);
+	font-size: 12px;
+}
+
+.dts-row-value--mono {
+	font-family: var(--font-monospace, monospace);
+	font-size: 12px;
+	color: var(--primary);
+}
+
+/* Inline action link — "↗ Open in Settings" style links */
+
+.dts-open-link {
+	font-size: 11px;
+	color: var(--text-muted);
+	text-decoration: none;
+	padding: 3px 7px;
+	border: 1px solid var(--border-color);
+	border-radius: 5px;
+	transition: all 0.12s;
+	white-space: nowrap;
+}
+
+.dts-open-link:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+	text-decoration: none;
+}
+
+/* Action row — row of small buttons below a section */
+
+.dts-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+}
+
+/* Divider between sections within a tab */
+
+.dts-divider {
+	height: 1px;
+	background: var(--border-color);
+	margin: 22px 0;
+}
+
+/* Badge — used for status labels like "Active", "Default" */
+
+.dts-badge {
+	display: inline-flex;
+	align-items: center;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 2px 7px;
+	border-radius: 10px;
+	letter-spacing: 0.2px;
+}
+
+.dts-badge--green {
+	background: var(--green-highlight);
+	color: var(--green);
+}
+
+.dts-badge--blue {
+	background: var(--primary-light);
+	color: var(--primary);
+}
+
+.dts-badge--gray {
+	background: var(--fg-color);
+	color: var(--text-muted);
+	border: 1px solid var(--border-color);
+}
+
+/* Empty state — used inside tabs when there's no data */
+
+.dts-empty {
+	text-align: center;
+	padding: 32px 0;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+
+/* ── 7. Naming Tab ─────────────────────────────────────────────────────── */
+
+/* Header row: section label left, "Add Series" button right */
+
+.dts-series-header {
+	margin-top: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+}
+
+/* Add-series input row: text input + live preview side by side */
+
+.dts-add-series-inputs {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.dts-add-series-inputs .form-control {
+	flex: 1;
+}
+
+.dts-series-preview-inline {
+	font-size: 12px;
+	color: var(--primary);
+	font-family: var(--font-monospace, monospace);
+	font-weight: 600;
+}
+
+/* Add-series preview row — "Example: INV-2026-05-26-00001" below the input */
+
+.dts-add-preview-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 22px;
+	margin-top: 6px;
+}
+
+.dts-add-preview-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+/* Section description — muted line of context below a section label */
+
+.dts-section-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin: 4px 0 0;
+	line-height: 1.6;
+}
+
+/* Inline documentation link inside a section description */
+
+.dts-doc-link {
+	color: var(--text-muted);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	margin-left: 4px;
+	white-space: nowrap;
+}
+
+.dts-doc-link:hover {
+	color: var(--primary);
+	text-decoration: underline;
+}
+
+/* Row label flex — replaces repeated inline style="display:flex;align-items:center;gap:8px" */
+
+.dts-row-label--flex {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* Series / rule name — monospace identifier displayed in a row */
+
+.dts-series-name {
+	font-family: var(--font-monospace, monospace);
+	font-size: 13px;
+	color: var(--text-color);
+	font-weight: 500;
+}
+
+/* Counter pill — compact badge replacing the verbose "Counter: X" text */
+
+.dts-counter-pill {
+	font-size: 11px;
+	font-family: var(--font-monospace, monospace);
+	color: var(--text-muted);
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	padding: 2px 8px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+/* Danger variant — for Remove / Delete action links */
+
+.dts-open-link--danger {
+	color: var(--red-500, var(--red));
+}
+
+.dts-open-link--danger:hover {
+	border-color: var(--red-500, var(--red));
+	color: var(--red-500, var(--red));
+	text-decoration: none;
+}
+
+/* Priority label — subtle meta shown on the right side of naming rule rows */
+
+.dts-priority-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+/* Format string — breaks long autoname format strings cleanly */
+
+.dts-format-string {
+	font-size: 11px;
+	word-break: break-all;
+}
+
+/* Preview list — three generated name examples stacked vertically */
+
+.dts-preview-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-top: 8px;
+}
+
+.dts-preview-item {
+	font-family: var(--font-monospace, monospace);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.dts-preview-item--muted {
+	font-size: 12px;
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
+.dts-preview-item--empty {
+	font-size: 13px;
+	color: var(--text-muted);
+	font-style: italic;
+	margin-top: 4px;
+}
