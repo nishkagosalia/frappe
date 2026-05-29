@@ -348,6 +348,15 @@
 		input[data-fieldtype="Currency"] {
 			text-align: right;
 		}
+
+		.col:last-child .field-area {
+			flex: 1;
+			min-width: 0;
+
+			.form-control:disabled {
+				text-align: center;
+			}
+		}
 	}
 
 	.grid-static-col[data-fieldtype="Button"] {
