@@ -1,6 +1,7 @@
 import "./dialog";
 import "./naming";
 import "./workflow";
+import "./email";
 
 $(document).on("form-refresh", function (e, frm) {
     if (!frm) return;
