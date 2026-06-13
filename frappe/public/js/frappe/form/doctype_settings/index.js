@@ -2,6 +2,7 @@ import "./dialog";
 import "./naming";
 import "./workflow";
 import "./email";
+import "./print_format";
 
 $(document).on("form-refresh", function (e, frm) {
     if (!frm) return;
