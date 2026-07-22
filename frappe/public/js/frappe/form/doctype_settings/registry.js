@@ -23,10 +23,9 @@ frappe.doctype_settings.register = function (tab_id, builder) {
 };
 
 /**
- * Shared overflow "…" menu used by list rows and custom tabs.
- *
- * Uses Bootstrap's native dropdown (`data-toggle="dropdown"`), which handles
- * open/close and outside-click on its own — no manual toggling.
+ * Shared overflow "…" menu used by list rows and custom tabs, built on the
+ * espresso Dropdown component (open/close, positioning, keyboard nav and
+ * outside-click all come from it — no manual wiring).
  *
  * `items`: [{ label, icon, danger, onclick() }] — falsy entries are skipped.
  * Returns the actions cell ($div) ready to append to a row. Callers that need a
@@ -37,35 +36,24 @@ frappe.doctype_settings.overflow_menu = function (items) {
 	const $cell = $('<div class="dts-list-cell dts-list-cell-actions"></div>');
 	if (!items.length) return $cell;
 
-	const $wrap = $('<div class="dropdown dts-actions"></div>').appendTo($cell);
 	frappe.ui
-		.button({
-			icon: "ellipsis",
-			size: "xs",
-			variant: "ghost",
-			title: __("More actions"),
-			css_class: "dts-actions-btn",
-			attrs: {
-				"data-toggle": "dropdown",
-				"aria-haspopup": "menu",
-				"aria-expanded": "false",
+		.dropdown({
+			button: {
+				label: "",
+				icon: "ellipsis",
+				size: "xs",
+				variant: "ghost",
+				title: __("More actions"),
 			},
+			align: "end",
+			options: items.map((item) => ({
+				label: item.label,
+				icon: item.icon,
+				theme: item.danger ? "red" : undefined,
+				onclick: () => item.onclick(),
+			})),
 		})
-		.appendTo($wrap);
-	const $menu = $('<div class="dropdown-menu dropdown-menu-right" role="menu"></div>').appendTo(
-		$wrap
-	);
-
-	items.forEach((item) => {
-		const $a = $(
-			'<button type="button" class="dropdown-item dts-action-item" role="menuitem"></button>'
-		);
-		if (item.icon) $a.append(frappe.utils.icon(item.icon, "sm"));
-		$a.append($("<span></span>").text(item.label));
-		if (item.danger) $a.addClass("text-danger");
-		$a.on("click", () => item.onclick());
-		$menu.append($a);
-	});
+		.appendTo($cell);
 
 	return $cell;
 };
@@ -92,9 +80,24 @@ frappe.doctype_settings.empty_state = function ($container, opts) {
 	return $empty;
 };
 
+// Shared loading placeholder: a short stack of skeleton lines (espresso skeleton
+// component; layout via utility classes — no custom CSS).
+frappe.doctype_settings.render_loading = function ($container) {
+	const $wrap = $('<div class="flex flex-col gap-3 py-4"></div>').attr(
+		"aria-label",
+		__("Loading")
+	);
+	["40%", "70%", "55%"].forEach((width) => {
+		$wrap.append(frappe.ui.skeleton({ width, height: "14px" }));
+	});
+	return $wrap.appendTo($container);
+};
+
 frappe.doctype_settings.render_error = function (panel, retry_fn) {
 	const $err = panel.body.empty();
-	$('<div class="text-muted small"></div>').text(__("Could not load this tab.")).appendTo($err);
+	$('<div class="text-ink-gray-5 text-p-sm"></div>')
+		.text(__("Could not load this tab."))
+		.appendTo($err);
 	frappe.ui.button({ label: __("Retry"), size: "xs", onclick: () => retry_fn() }).appendTo($err);
 };
 

@@ -32,7 +32,7 @@ function perm_call(method, args) {
 
 function draw(panel, doctype) {
 	const $body = panel.body.empty();
-	$(`<div class="text-muted small dts-perm-state">${__("Loading")}</div>`).appendTo($body);
+	frappe.doctype_settings.render_loading($body);
 
 	Promise.all([
 		perm_call("get_permissions", { doctype }),
@@ -202,37 +202,50 @@ function flag_badge() {
 }
 
 function customized_banner(panel, doctype, reload) {
-	const $banner = $('<div class="alert alert-warning dts-perm-banner" role="alert"></div>');
-	$banner.append(frappe.utils.icon("triangle-alert", "sm"));
-	$('<span class="dts-perm-banner-text"></span>')
-		.text(__("Permissions for this doctype have been customized."))
-		.appendTo($banner);
-	$('<a href="#" class="dts-perm-banner-action"></a>')
-		.text(__("Reset to default"))
-		.appendTo($banner)
-		.on("click", (e) => {
-			e.preventDefault();
-			frappe.confirm(
-				__("Reset {0} permissions to their default? This removes all customizations.", [
-					doctype,
-				]),
-				() =>
-					perm_call("reset", { doctype }).then(() => {
-						frappe.show_alert({
-							message: __("Permissions reset"),
-							indicator: "green",
-						});
-						reload();
-					})
-			);
-		});
-	return $banner;
+	const reset = () =>
+		frappe.confirm(
+			__("Reset {0} permissions to their default? This removes all customizations.", [
+				doctype,
+			]),
+			() =>
+				perm_call("reset", { doctype }).then(() => {
+					frappe.show_alert({ message: __("Permissions reset"), indicator: "green" });
+					reload();
+				})
+		);
+
+	const $alert = frappe.ui
+		.alert({
+			title: __("Permissions for this doctype have been customized."),
+			theme: "yellow",
+		})
+		.addClass("mb-3");
+
+	// The espresso alert's `footer` slot is built for a block of actions below the
+	// title (its own row, gapped); a single small "Reset" reads better inline, next
+	// to the title text, matching this banner's original compact one-line shape.
+	$alert
+		.find(".es-alert__title")
+		.addClass("flex flex-wrap items-center gap-2")
+		.append(
+			$('<a href="#" class="dts-perm-banner-action text-p-sm"></a>')
+				.text(__("Reset to default"))
+				.on("click", (e) => {
+					e.preventDefault();
+					reset();
+				})
+		);
+
+	return $alert;
 }
 
 function footer(panel, doctype) {
-	const $footer = $('<div class="dts-perm-footer"></div>');
-	$("<span></span>").appendTo($footer); // spacer to keep the link right-aligned
-	$('<a href="#" class="dts-perm-footer-link"></a>')
+	const $footer = $(
+		'<div class="flex items-center justify-end gap-4 mt-3 pt-4 border-t"></div>'
+	);
+	$(
+		'<a href="#" class="inline-flex items-center gap-1 text-ink-gray-7 text-base-medium whitespace-nowrap"></a>'
+	)
 		.append($("<span></span>").text(__("Open Role Permissions Manager")))
 		.append(frappe.utils.icon("external-link", "sm"))
 		.appendTo($footer)

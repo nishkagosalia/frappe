@@ -67,7 +67,8 @@ class ListPanel {
 	}
 
 	load() {
-		this.render_state(__("Loading"));
+		this.$body.empty();
+		frappe.doctype_settings.render_loading(this.$body);
 		const c = this.config;
 		const source = c.load ? c.load() : Promise.resolve(c.rows || []);
 		Promise.resolve(source)
@@ -103,7 +104,7 @@ class ListPanel {
 		if (!this.rows.length) return this.render_empty();
 
 		this.apply_header(true);
-		const $list = $('<div class="dts-list"></div>').appendTo(this.$body);
+		const $list = $('<div class="flex flex-col"></div>').appendTo(this.$body);
 		if (this.config.show_header) $list.append(this.make_head());
 
 		this._row_els = new Map();
@@ -116,7 +117,9 @@ class ListPanel {
 
 	make_head() {
 		const c = this.config;
-		const $head = $('<div class="dts-list-row dts-list-head"></div>');
+		const $head = $(
+			'<div class="flex items-center gap-4 pb-2 border-b text-ink-gray-5 text-sm-medium"></div>'
+		);
 
 		// The title column owns the leading media, so its header label sits at the
 		// column's left edge (above the thumbnail) and the rest stays aligned.
@@ -125,7 +128,7 @@ class ListPanel {
 			.appendTo($head);
 
 		(c.columns || []).forEach((col) => {
-			const $cell = $('<div class="dts-list-cell"></div>')
+			const $cell = $('<div class="dts-list-cell flex-1 min-w-0"></div>')
 				.text(col.label || "")
 				.appendTo($head);
 			if (col.width) $cell.css("flex", `0 0 ${col.width}`);
@@ -145,17 +148,19 @@ class ListPanel {
 
 	make_row(row) {
 		const c = this.config;
-		const $row = $('<div class="dts-list-row"></div>');
+		const $row = $('<div class="flex items-center gap-4 py-4 border-b"></div>');
 
 		// Title column = (primary / secondary) text.
 		const tc = c.title_column || {};
 		const $title = $('<div class="dts-list-cell dts-list-cell-title"></div>').appendTo($row);
 
-		const $text = $('<div class="dts-list-text"></div>').appendTo($title);
+		const $text = $('<div class="min-w-0"></div>').appendTo($title);
 
 		// Primary line: name + inline tags (attributes of the row, e.g. Default / Global).
-		const $primaryRow = $('<div class="dts-list-primary-row"></div>').appendTo($text);
-		const $primary = $('<div class="dts-list-primary ellipsis"></div>')
+		const $primaryRow = $('<div class="flex items-center gap-2 min-w-0"></div>').appendTo(
+			$text
+		);
+		const $primary = $('<div class="text-ink-gray-8 text-base-medium min-w-0 truncate"></div>')
 			.text(tc.primary ? tc.primary(row) : "")
 			.appendTo($primaryRow);
 		if (tc.onclick) {
@@ -170,12 +175,14 @@ class ListPanel {
 		);
 
 		if (tc.secondary && tc.secondary(row)) {
-			$('<div class="dts-list-secondary"></div>').text(tc.secondary(row)).appendTo($text);
+			$('<div class="dts-list-secondary text-ink-gray-5 text-p-sm"></div>')
+				.text(tc.secondary(row))
+				.appendTo($text);
 		}
 
 		// Middle columns: text or badge.
 		(c.columns || []).forEach((col) => {
-			const $cell = $('<div class="dts-list-cell"></div>').appendTo($row);
+			const $cell = $('<div class="dts-list-cell flex-1 min-w-0"></div>').appendTo($row);
 			if (col.width) $cell.css("flex", `0 0 ${col.width}`);
 			if (col.align) $cell.css("text-align", col.align);
 
@@ -205,7 +212,7 @@ class ListPanel {
 		const disabled = t.disabled ? t.disabled(row) : false;
 
 		const $label = $(`
-			<label class="switch-control dts-switch">
+			<label class="switch-control m-0 cursor-pointer">
 				<span class="input-area">
 					<input type="checkbox" role="switch" />
 				</span>
@@ -260,15 +267,10 @@ class ListPanel {
 		});
 	}
 
-	render_state(text) {
-		this.$body.empty();
-		$('<div class="text-muted small dts-list-state"></div>').text(text).appendTo(this.$body);
-	}
-
 	render_error() {
 		this.$body.empty();
-		const $err = $('<div class="dts-list-state"></div>').appendTo(this.$body);
-		$('<div class="text-muted small"></div>')
+		const $err = $('<div class="flex items-center gap-3 py-5"></div>').appendTo(this.$body);
+		$('<div class="text-ink-gray-5 text-p-sm"></div>')
 			.text(__("Could not load this tab."))
 			.appendTo($err);
 		frappe.ui

@@ -13,9 +13,7 @@ class DocTypeSettingsMap(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.core.doctype.doctype_settings_map_item.doctype_settings_map_item import (
-			DocTypeSettingsMapItem,
-		)
+		from frappe.core.doctype.doctype_settings_map_item.doctype_settings_map_item import DocTypeSettingsMapItem
 		from frappe.types import DF
 
 		applies_to_doctype: DF.Link

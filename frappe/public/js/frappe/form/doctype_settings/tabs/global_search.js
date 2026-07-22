@@ -10,7 +10,7 @@ frappe.doctype_settings.register("global-search", function (panel, doctype) {
 
 function load(panel, doctype) {
 	panel.body.empty();
-	$(`<div class="text-muted small">${__("Loading")}</div>`).appendTo(panel.body);
+	frappe.doctype_settings.render_loading(panel.body);
 
 	frappe.db
 		.get_doc(SETTINGS)
@@ -87,7 +87,7 @@ function draw(panel, doctype, state) {
 
 	if (!state.included) return;
 
-	$(`<div class="text-base pb-3 font-medium">${__("Configure fields")}</div>`).appendTo($body);
+	$(`<div class="text-base-medium pb-3">${__("Configure fields")}</div>`).appendTo($body);
 
 	const $input = $('<input type="text" class="form-control input-sm dts-gs-search" />')
 		.attr("placeholder", __("Search fields"))
@@ -107,7 +107,7 @@ function draw(panel, doctype, state) {
 	$input.on("input", () => {
 		const q = ($input.val() || "").toLowerCase().trim();
 		$grid.find(".dts-gs-item").each((i, el) => {
-			$(el).toggleClass("hide", !!q && !$(el).attr("data-search").includes(q));
+			$(el).toggleClass("hidden", !!q && !$(el).attr("data-search").includes(q));
 		});
 	});
 }
@@ -166,7 +166,7 @@ function make_switch(label, checked, onchange) {
 function make_check(label, checked, onchange) {
 	const $label = $(`<label class="dts-check">
 			<input type="checkbox" />
-			<span class="dts-check-label ellipsis"></span>
+			<span class="dts-check-label truncate"></span>
 		</label>`);
 	$label.find(".dts-check-label").text(label);
 	$label

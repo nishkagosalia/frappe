@@ -47,7 +47,7 @@ frappe.doctype_settings.register("print-format", function (panel, doctype) {
 
 	function load() {
 		panel.body.empty();
-		$(`<div class="text-muted small">${__("Loading")}</div>`).appendTo(panel.body);
+		frappe.doctype_settings.render_loading(panel.body);
 
 		// Reuse generic client APIs: get_list for the formats and a printable sample
 		// (submitted-only for submittable doctypes) for previews. The current default is
@@ -123,7 +123,7 @@ frappe.doctype_settings.register("print-format", function (panel, doctype) {
 					${frappe.ui.badge.html({
 						label: __("Custom"),
 						theme: "blue",
-						css_class: "dts-pf-badge hide",
+						css_class: "dts-pf-badge hidden",
 					})}
 					<button type="button" class="dts-pf-star" data-selected="${
 						is_default ? "true" : "false"
@@ -133,7 +133,7 @@ frappe.doctype_settings.register("print-format", function (panel, doctype) {
 					</div>
 				</div>
 				<div class="dts-pf-footer">
-					<span class="dts-pf-name ellipsis"></span>
+					<span class="dts-pf-name truncate"></span>
 				</div>
 			</div>
 		`);
@@ -141,7 +141,7 @@ frappe.doctype_settings.register("print-format", function (panel, doctype) {
 		const $thumb = $card.find(".dts-pf-thumb");
 		const $star = $card.find(".dts-pf-star");
 
-		if (is_custom) $card.find(".dts-pf-badge").removeClass("hide");
+		if (is_custom) $card.find(".dts-pf-badge").removeClass("hidden");
 
 		// Thumbnail comes from the Print Format's own `preview_image` (generated from its
 		// form's "Generate Preview" button); formats without one show the placeholder.
@@ -191,7 +191,8 @@ frappe.doctype_settings.register("print-format", function (panel, doctype) {
 			fields: [{ fieldtype: "HTML", fieldname: "preview" }],
 		});
 		const $wrapper = dialog.fields_dict.preview.$wrapper;
-		$wrapper.html(`<div class="text-muted small">${__("Loading")}</div>`);
+		$wrapper.empty();
+		frappe.doctype_settings.render_loading($wrapper);
 		dialog.show();
 
 		// Render the print HTML server-side and inject it as a static (JS-free) iframe via

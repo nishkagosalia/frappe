@@ -24,21 +24,24 @@ frappe.doctype_settings.register("naming", function (panel, doctype) {
 	});
 });
 
-// Render a section header (reusing the dialog's panel-title classes for a consistent
-// look) + an EmbeddedList table beneath it. Returns the list so callers can refresh().
+// Render a section header (same title/description type scale as the dialog's own
+// panel header — text-xl-semibold / text-ink-gray-6, via utility classes rather than
+// sharing those classes directly) + an EmbeddedList table beneath it. Returns the
+// list so callers can refresh().
 function make_section($parent, { title, description, add_label, on_add }, list_opts) {
 	const $section = $('<div class="dts-section"></div>').appendTo($parent);
 	const $header = $(`
-		<div class="settings-dialog-panel-header">
-			<div class="settings-dialog-panel-heading">
-				<div class="settings-dialog-panel-title"></div>
-				<div class="settings-dialog-panel-description"></div>
+		<div class="flex justify-between items-start gap-4 mb-4">
+			<div class="flex flex-col gap-1 w-full">
+				<div class="dts-section-title text-xl-semibold"></div>
+				<div class="dts-section-description text-base text-ink-gray-6"></div>
 			</div>
-			<div class="settings-dialog-panel-actions"></div>
+			<div class="dts-section-actions flex items-center gap-2 shrink-0"></div>
 		</div>
 	`).appendTo($section);
-	$header.find(".settings-dialog-panel-title").text(title);
-	$header.find(".settings-dialog-panel-description").text(description);
+	$header.find(".dts-section-title").text(title);
+	$header.find(".dts-section-description").text(description);
+	const $actions = $header.find(".dts-section-actions");
 
 	const list = new frappe.ui.EmbeddedList({
 		wrapper: $("<div></div>").appendTo($section),
@@ -53,7 +56,7 @@ function make_section($parent, { title, description, add_label, on_add }, list_o
 				icon: "plus",
 				onclick: () => on_add(() => list.refresh()),
 			})
-			.appendTo($header.find(".settings-dialog-panel-actions"));
+			.appendTo($actions);
 	}
 	return list;
 }

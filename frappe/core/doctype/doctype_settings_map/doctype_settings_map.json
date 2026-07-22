@@ -1,7 +1,7 @@
 {
  "actions": [],
  "creation": "2026-06-25 00:00:00",
- "description": "Settings from Single (Settings) doctypes that apply to a given doctype. Up to one standard (shipped) and one custom (user) record per doctype; the active record's grid surfaces in the target doctype's DocType Settings \u2192 General tab.",
+ "description": "Maps Single Settings to a specific DocType. Each DocType can have standard and custom settings; the active one is shown in DocType Settings \u2192 General.\n",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -61,7 +61,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-30 15:02:17.168692",
+ "modified": "2026-07-22 11:22:03.404988",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "DocType Settings Map",

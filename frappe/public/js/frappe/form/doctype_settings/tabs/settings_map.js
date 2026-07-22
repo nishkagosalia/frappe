@@ -19,7 +19,7 @@ frappe.doctype_settings.register("general", function (panel, doctype) {
 
 function load(panel, doctype) {
 	const $body = panel.body.empty();
-	$('<div class="text-muted small"></div>').text(__("Loading")).appendTo($body);
+	frappe.doctype_settings.render_loading($body);
 
 	frappe
 		.call({
@@ -62,10 +62,12 @@ function render_field($body, group, field) {
 	const $row = $('<div class="dts-setting"></div>').appendTo($body);
 	field.$row = $row; // referenced by apply_dependencies() to show/hide the field
 
-	const $text = $('<div class="dts-setting-text"></div>').appendTo($row);
-	$('<div class="dts-setting-label"></div>').text(field.label).appendTo($text);
+	const $text = $('<div class="min-w-0"></div>').appendTo($row);
+	$('<div class="text-base text-ink-gray-8"></div>').text(field.label).appendTo($text);
 	if (field.description) {
-		$('<div class="dts-setting-description"></div>').text(field.description).appendTo($text);
+		$('<div class="dts-setting-description text-p-sm text-ink-gray-5"></div>')
+			.text(field.description)
+			.appendTo($text);
 	}
 
 	const $control = $('<div class="dts-setting-control"></div>').appendTo($row);
