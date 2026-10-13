@@ -1,4 +1,4 @@
-import { CHART_PALETTE } from "./utils.js";
+import { CHART_PALETTE, make_activatable } from "./utils.js";
 
 frappe.provide("frappe.ui");
 
@@ -15,6 +15,7 @@ frappe.provide("frappe.ui");
  * @property {{value: string, label?: string}} [center] Text in the hole when nothing is hovered.
  * @property {function} [format] (value) -> string, for the hovered centre and the tooltip.
  * @property {number} [size=240] Chart width and height, in px.
+ * @property {function} [onclick] (segment) -> void, with the segment as passed in. Makes each segment and legend row a button, e.g. to open the records behind it.
  * @property {string} [css_class] Extra classes on the root.
  */
 
@@ -32,8 +33,9 @@ frappe.provide("frappe.ui");
  */
 frappe.ui.Donut = class Donut {
 	/** @param {DonutOpts} opts */
-	constructor({ segments = [], center, format, size = 240, css_class } = {}) {
+	constructor({ segments = [], center, format, size = 240, onclick, css_class } = {}) {
 		this.center = center || {};
+		this.onclick = onclick;
 		this.format = format || ((v) => String(v));
 		this.size = size;
 		const ro = size * 0.46;
@@ -70,6 +72,7 @@ frappe.ui.Donut = class Donut {
 			const sweep = (flt(s.value) / total) * 2 * Math.PI;
 			const g = Math.min(gap, sweep / 2);
 			const seg = {
+				source: s,
 				label: s.label,
 				value: flt(s.value),
 				color: s.color || CHART_PALETTE[i % CHART_PALETTE.length],
@@ -101,6 +104,10 @@ frappe.ui.Donut = class Donut {
 		this.shapes = this.segments.map((seg, i) => {
 			const shape = svg_el("path", { class: "es-donut__seg", d: this.path(seg, ro) });
 			shape.style.fill = seg.color;
+			if (this.onclick) {
+				shape.classList.add("es-donut__seg--clickable");
+				shape.addEventListener("click", () => this.onclick(seg.source));
+			}
 			$(shape)
 				.on("mouseenter", (e) => {
 					this.highlight(i);
@@ -129,7 +136,7 @@ frappe.ui.Donut = class Donut {
 	render_legend() {
 		this.$legend = $('<div class="es-donut__legend">').appendTo(this.$el);
 		this.segments.forEach((seg, i) => {
-			$('<div class="es-donut__legend-row" tabindex="0">')
+			const $row = $('<div class="es-donut__legend-row" tabindex="0">')
 				.append(dot(seg.color))
 				.append($('<span class="es-donut__legend-label">').text(seg.label))
 				.append(
@@ -143,6 +150,11 @@ frappe.ui.Donut = class Donut {
 				})
 				.on("blur", () => this.clear())
 				.appendTo(this.$legend);
+			if (this.onclick) {
+				make_activatable($row.addClass("es-donut__legend-row--clickable"), () =>
+					this.onclick(seg.source)
+				);
+			}
 		});
 	}
 

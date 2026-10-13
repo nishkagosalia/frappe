@@ -152,3 +152,8 @@
     outline: var(--focus-outline-default);
     outline-offset: 2px;
 }
+
+.es-donut__seg--clickable,
+.es-donut__legend-row--clickable {
+    cursor: pointer;
+}
